@@ -45,7 +45,6 @@ public class IdentifierBinder extends ANodeBinder {
 
     @Override
     public IBoundNode bindTarget(ISyntaxNode node, IBindingContext bindingContext, IBoundNode target) {
-
         String fieldName = node.getText();
         IOpenClass type = target.getType();
         int dims = 0;
@@ -54,10 +53,11 @@ public class IdentifierBinder extends ANodeBinder {
             type = type.getComponentClass();
         }
         IOpenField field;
+        boolean strictMatch = isStrictMatch(node);
         if (target.isStaticTarget()) {
-            field = type.getStaticField(fieldName, false);
+            field = type.getStaticField(fieldName, strictMatch);
         } else {
-            field = type.getField(fieldName, false);
+            field = type.getField(fieldName, strictMatch);
         }
 
         if (field == null) {
