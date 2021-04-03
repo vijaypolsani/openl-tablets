@@ -2,16 +2,21 @@
 <ui:composition
     xmlns:ui="http://java.sun.com/jsf/facelets"
     xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:a4j="http://richfaces.org/a4j"
     xmlns:c="http://java.sun.com/jsp/jstl/core"
     xmlns:fn="http://java.sun.com/jsp/jstl/functions"
     xmlns:rich="http://richfaces.org/rich">
 
     <h:panelGroup id="#{!empty id ? id : 'version'}" rendered="#{!empty rendered ? rendered : true}">
-        <script src="#{facesContext.externalContext.request.contextPath}/javascript/taglib/html/inputVersion.js" />
+        <h:inputText id="versionInput" readonly="true" value="#{value}" onclick="showVersionPopup(this)"/>
+        <a4j:commandLink title="Clear"
+                 style="text-decoration: none; display:#{(empty value) ? 'none' : 'inline-block'}; margin-left: 5px;"
+                 id="versionClear"
+                 onclick="clearVersion(this);">
+            <img src="#{request.contextPath}/webresource/images/close.gif" style="opacity:0.4"/>
+        </a4j:commandLink>
 
-        <h:inputText value="#{value}" readonly="true" onclick="showVersionPopup(this, event)" />
-
-        <div style="display: none; padding: 2px 6px; border-top: 0">
+        <div id="versionPopup" style="display: none; padding: 2px 6px; border-top: 0">
             <c:set var="subVersions" value="#{value != null ? fn:split(value, '.') : null}" />
             <c:set var="majorVersion" value="#{subVersions != null and fn:length(subVersions) > 0 ? subVersions[0] : 0}"/>
             <c:set var="minorVersion" value="#{subVersions != null and fn:length(subVersions) > 1 ? subVersions[1] : 0}"/>
@@ -34,7 +39,42 @@
             </h:panelGrid>
         </div>
 
-        <h:inputHidden value="#{value}" />
+        <h:inputHidden id="versionHidden" value="#{value}" />
+
+        <script>
+            function showVersionPopup(element) {
+                let input = $j(element);
+                let left = input.position().left + input.offsetParent().scrollLeft();
+                let top  = input.position().top + input.offsetParent().scrollTop() + input.outerHeight();
+                let popup = $j("#versionPopup");
+
+                popup.popup({
+                    caller: element,
+                    left  : left,
+                    top   : top
+                });
+            }
+
+            function applyVersion(element, isShort, i) {
+                let input = $j("#versionInput");
+                let version = input.val() || (isShort ? "0.0.0" : "0.0");
+                let subVersions = version.split(".");
+                subVersions[i] = $j(element).find("input").val();
+                let result = subVersions.join(".");
+                input.val(result);
+                $j(input).trigger("change");
+                $j("#versionHidden").val(result);
+                $j("#versionClear").css("display", "inline-block");
+            }
+
+            function clearVersion(element) {
+                let input = $j("#versionInput");
+                input.val("");
+                $j(input).trigger("change");
+                $j("#versionHidden").val("");
+                $j(element).hide();
+            }
+        </script>
     </h:panelGroup>
 
 </ui:composition>
